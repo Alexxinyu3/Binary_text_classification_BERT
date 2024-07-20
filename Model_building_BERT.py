@@ -11,6 +11,8 @@ from pathlib import Path
 
 OUTPUT_DIR = Path("./output")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+PLOT_DIR = OUTPUT_DIR / "plot"
+WEIGHTS_DIR = OUTPUT_DIR / "weights"
 
 # 1.load the data
 file_path = 'D:/Desktop/study in France/ESIGELEC-study/Intership/IPSOS/cleaned_data_for_model.xlsx'
@@ -154,7 +156,7 @@ for epoch in range(epochs):
         f'>> EVAL == Accuracy: {accuracy}  '
         f'Eval Loss: {avg_eval_loss}'
     )
-    torch.save(model.state_dict(), str(OUTPUT_DIR / f'best_e{epoch + 1}.pth')) if accuracy > best_acc else None
+    torch.save(model.state_dict(), str(WEIGHTS_DIR / f'best_e{epoch + 1}.pth')) if accuracy > best_acc else None
 
 # TODO: Use matplotlib.pyplot draw -- Train loss curve, eval loss curve, accuracy curve
 print(
@@ -185,7 +187,7 @@ for batch in eval_dataloader:
 accuracy = accuracy_score(true_labels, predictions)
 print(f'Accuracy: {accuracy}')
 print(classification_report(true_labels, predictions))
-torch.save(model.state_dict(), str(OUTPUT_DIR / 'final.pth'))
+torch.save(model.state_dict(), str(WEIGHTS_DIR / 'final.pth'))
 
 # 8. Plot Losses & Accuracies
 plt.figure()
@@ -194,7 +196,7 @@ plt.title('Training Loss')
 plt.xlabel('Epoch')
 plt.ylabel('Loss')
 plt.grid(True)
-plt.savefig(str(OUTPUT_DIR / "train_loss.png"))
+plt.savefig(str(PLOT_DIR / "train_loss.png"))
 
 plt.figure()
 plt.plot(eval_losses, marker='o', linestyle='-', color='b')
@@ -202,7 +204,7 @@ plt.title('Evaluating Loss')
 plt.xlabel('Epoch')
 plt.ylabel('Loss')
 plt.grid(True)
-plt.savefig(str(OUTPUT_DIR / "eval_loss.png"))
+plt.savefig(str(PLOT_DIR / "eval_loss.png"))
 
 plt.figure()
 plt.plot(accuracies, marker='x', linestyle='--', color='r')
@@ -210,4 +212,4 @@ plt.title('Accuracy Curve')
 plt.xlabel('Epoch')
 plt.ylabel('Accuracy')
 plt.grid(True)
-plt.savefig(str(OUTPUT_DIR / "acc.png"))
+plt.savefig(str(PLOT_DIR / "acc.png"))
