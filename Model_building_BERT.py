@@ -51,7 +51,7 @@ def encode_data(texts, labels, max_length=128):
 train_inputs, train_masks, train_labels = encode_data(train_df.cleaned_text.values, train_df.sentiment.values)
 eval_inputs, eval_masks, eval_labels = encode_data(eval_df.cleaned_text.values, eval_df.sentiment.values)
 
-### 4.Create a PyTorch Dataset and DataLoader
+# 4.Create a PyTorch Dataset and DataLoader
 # Create the DataLoader for our training set
 train_dataset = TensorDataset(train_inputs, train_masks, train_labels)
 train_dataloader = DataLoader(
@@ -68,7 +68,7 @@ eval_dataloader = DataLoader(
     batch_size=32
 )
 
-### 5.Fine-tune a Pre-trained BERT Model for Text Classification
+# 5.Fine-tune a Pre-trained BERT Model for Text Classification
 # Load the BERT model for sequence classification
 model = BertForSequenceClassification.from_pretrained(
     'bert-base-uncased',
@@ -84,7 +84,7 @@ model.to(device)
 # Set up the optimizer
 optimizer = AdamW(model.parameters(), lr=2e-5, eps=1e-8)
 
-### 6. Train the Model
+# 6. Train the Model
 
 # Number of training epochs
 epochs = 1
@@ -101,6 +101,7 @@ for epoch in range(epochs):
     model.train()
     total_train_loss = 0
     for step, batch in enumerate(train_dataloader):
+        # noinspection PyTupleAssignmentBalance
         b_input_ids, b_input_mask, b_labels = batch
         b_input_ids = b_input_ids.to(device)
         b_input_mask = b_input_mask.to(device).to(torch.float32)
@@ -166,7 +167,7 @@ print(
     f"Best Accuracy: {best_acc}"
 )
 
-### 7. Evaluate the Model on the eval Set
+# 7. Evaluate the Model on the eval Set
 
 model.eval()
 predictions, true_labels = [], []
