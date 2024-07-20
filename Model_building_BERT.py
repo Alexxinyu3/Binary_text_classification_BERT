@@ -88,7 +88,7 @@ optimizer = AdamW(model.parameters(), lr=2e-5, eps=1e-8)
 # 6. Train the Model
 
 # Number of training epochs
-epochs = 100
+epochs = 30
 
 # Total number of training steps
 total_steps = len(train_dataloader) * epochs
@@ -164,7 +164,6 @@ for epoch in range(epochs):
         torch.save(model.state_dict(), str(WEIGHTS_DIR / 'best.pth'))
         print(f">> Best Model saved with accuracy: {best_acc}")
 
-# TODO: Use matplotlib.pyplot draw -- Train loss curve, eval loss curve, accuracy curve
 print(
     f"Train Loss: {train_losses}\n"
     f"Eval Loss: {eval_losses}\n"
@@ -197,7 +196,7 @@ torch.save(model.state_dict(), str(WEIGHTS_DIR / 'final.pth'))
 
 # 8. Plot Losses & Accuracies
 plt.figure()
-plt.plot(train_losses, marker='o', linestyle='-', color='b')
+plt.plot(train_losses, linestyle='-', color='b')
 plt.title('Training Loss')
 plt.xlabel('Epoch')
 plt.ylabel('Loss')
@@ -205,7 +204,7 @@ plt.grid(True)
 plt.savefig(str(PLOT_DIR / "train_loss.png"))
 
 plt.figure()
-plt.plot(eval_losses, marker='o', linestyle='-', color='b')
+plt.plot(eval_losses, linestyle='-', color='b')
 plt.title('Evaluating Loss')
 plt.xlabel('Epoch')
 plt.ylabel('Loss')
@@ -213,7 +212,7 @@ plt.grid(True)
 plt.savefig(str(PLOT_DIR / "eval_loss.png"))
 
 plt.figure()
-plt.plot(accuracies, marker='x', linestyle='--', color='r')
+plt.plot(accuracies, linestyle='--', color='r')
 plt.title('Accuracy Curve')
 plt.xlabel('Epoch')
 plt.ylabel('Accuracy')

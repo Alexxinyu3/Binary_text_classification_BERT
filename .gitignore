@@ -295,6 +295,9 @@ pyrightconfig.json
 # Data
 *.png
 *.jpg
+*.xls
+*.xlsx
+*.csv
 
 # Env
 /.venv
