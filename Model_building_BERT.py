@@ -12,15 +12,15 @@ from pathlib import Path
 OUTPUT_DIR = Path("./output")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-# 1.load the data --------------------------------------------------------------------------------
+# 1.load the data
 file_path = 'D:/Desktop/study in France/ESIGELEC-study/Intership/IPSOS/cleaned_data_for_model.xlsx'
 df = pd.read_excel(file_path).dropna()  # Drop NaN
 df = df.sample(frac=1, random_state=42).reset_index(drop=True)  # Shuffle
 
-### 2.Split the data into Training and evaling Sets
+# 2.Split the data into Training and evaluating Sets
 train_df, eval_df = train_test_split(df, test_size=0.3, random_state=42)
 
-### 3.Tokenize and Encode the Text Data Using BERT Tokenizer
+# 3.Tokenize and Encode the Text Data Using BERT Tokenizer
 # Load the BERT tokenizer
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
@@ -55,7 +55,7 @@ train_dataset = TensorDataset(train_inputs, train_masks, train_labels)
 train_dataloader = DataLoader(
     train_dataset,
     sampler=RandomSampler(train_dataset),
-    batch_size=32 
+    batch_size=32
 )
 
 # Create the DataLoader for our eval set
@@ -138,29 +138,30 @@ for epoch in range(epochs):
         b_input_mask = b_input_mask.to(device)
 
         with torch.no_grad():
-            outputs = model(b_input_ids, token_type_ids=None, attention_mask=b_input_mask)
+            outputs = model(b_input_ids, token_type_ids=None, attention_mask=b_input_mask, labels=b_labels)
 
-        # total_eval_loss += outputs.loss.item()
+        total_eval_loss += outputs.loss.item()
         logits = outputs.logits
         # predictions.extend(torch.argmax(logits, dim=1).cpu().numpy())
         predictions.extend((logits.squeeze() >= 0.5).long().cpu().numpy().tolist())
         true_labels.extend(b_labels.cpu().numpy())
 
-    # avg_eval_loss = total_eval_loss / len(eval_dataloader)
-    # eval_losses.append(avg_eval_loss)
+    avg_eval_loss = total_eval_loss / len(eval_dataloader)
+    eval_losses.append(avg_eval_loss)
     accuracy = accuracy_score(true_labels, predictions)
     accuracies.append(accuracy)
     print(
         f'>> EVAL == Accuracy: {accuracy}  '
-        # f'Eval Loss: {avg_eval_loss}'
+        f'Eval Loss: {avg_eval_loss}'
     )
     torch.save(model.state_dict(), str(OUTPUT_DIR / f'best_e{epoch + 1}.pth')) if accuracy > best_acc else None
 
 # TODO: Use matplotlib.pyplot draw -- Train loss curve, eval loss curve, accuracy curve
 print(
     f"Train Loss: {train_losses}\n"
-    # f"Eval Loss: {eval_losses}\n"
-    f"Accuracies: {accuracies}"
+    f"Eval Loss: {eval_losses}\n"
+    f"Accuracies: {accuracies}\n"
+    f"Best Accuracy: {best_acc}"
 )
 
 ### 7. Evaluate the Model on the eval Set
@@ -194,6 +195,14 @@ plt.xlabel('Epoch')
 plt.ylabel('Loss')
 plt.grid(True)
 plt.savefig(str(OUTPUT_DIR / "train_loss.png"))
+
+plt.figure()
+plt.plot(eval_losses, marker='o', linestyle='-', color='b')
+plt.title('Evaluating Loss')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.grid(True)
+plt.savefig(str(OUTPUT_DIR / "eval_loss.png"))
 
 plt.figure()
 plt.plot(accuracies, marker='x', linestyle='--', color='r')
