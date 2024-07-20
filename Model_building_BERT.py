@@ -6,7 +6,11 @@ from torch.utils.data import TensorDataset, DataLoader, RandomSampler, Sequentia
 from transformers import BertForSequenceClassification, AdamW
 from transformers import get_linear_schedule_with_warmup
 from sklearn.metrics import accuracy_score, classification_report
+import matplotlib.pyplot as plt
+from pathlib import Path
 
+OUTPUT_DIR = Path("./output")
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # 1.load the data --------------------------------------------------------------------------------
 file_path = 'D:/Desktop/study in France/ESIGELEC-study/Intership/IPSOS/cleaned_data_for_model.xlsx'
@@ -15,7 +19,6 @@ df = df.sample(frac=1, random_state=42).reset_index(drop=True)  # Shuffle
 
 ### 2.Split the data into Training and evaling Sets
 train_df, eval_df = train_test_split(df, test_size=0.3, random_state=42)
-
 
 ### 3.Tokenize and Encode the Text Data Using BERT Tokenizer
 # Load the BERT tokenizer
@@ -42,9 +45,9 @@ def encode_data(texts, labels, max_length=128):
 
     return torch.cat(input_ids, dim=0), torch.cat(attention_masks, dim=0), torch.tensor(labels)
 
+
 train_inputs, train_masks, train_labels = encode_data(train_df.cleaned_text.values, train_df.sentiment.values)
 eval_inputs, eval_masks, eval_labels = encode_data(eval_df.cleaned_text.values, eval_df.sentiment.values)
-
 
 ### 4.Create a PyTorch Dataset and DataLoader
 # Create the DataLoader for our training set
@@ -52,7 +55,7 @@ train_dataset = TensorDataset(train_inputs, train_masks, train_labels)
 train_dataloader = DataLoader(
     train_dataset,
     sampler=RandomSampler(train_dataset),
-    batch_size=32
+    batch_size=32 
 )
 
 # Create the DataLoader for our eval set
@@ -118,17 +121,17 @@ for epoch in range(epochs):
         optimizer.step()
         scheduler.step()
         print(f"> Step {step}, Loss: {loss.item()}")
-    
+
     # Epoch finished, calculate train loss
     avg_train_loss = total_train_loss / len(train_dataloader)
     print(f'>> Epoch {epoch + 1}, Train Loss: {avg_train_loss}')
     train_losses.append(avg_train_loss)
-    
+
     # Evaluation
     model.eval()
     total_eval_loss = 0
     predictions, true_labels = [], []
-    
+
     for batch in eval_dataloader:
         b_input_ids, b_input_mask, b_labels = batch
         b_input_ids = b_input_ids.to(device)
@@ -136,7 +139,7 @@ for epoch in range(epochs):
 
         with torch.no_grad():
             outputs = model(b_input_ids, token_type_ids=None, attention_mask=b_input_mask)
-            
+
         # total_eval_loss += outputs.loss.item()
         logits = outputs.logits
         # predictions.extend(torch.argmax(logits, dim=1).cpu().numpy())
@@ -151,7 +154,7 @@ for epoch in range(epochs):
         f'>> EVAL == Accuracy: {accuracy}  '
         # f'Eval Loss: {avg_eval_loss}'
     )
-    torch.save(model.state_dict(), f'best_e{epoch + 1}.pth') if accuracy > best_acc else None
+    torch.save(model.state_dict(), str(OUTPUT_DIR / f'best_e{epoch + 1}.pth')) if accuracy > best_acc else None
 
 # TODO: Use matplotlib.pyplot draw -- Train loss curve, eval loss curve, accuracy curve
 print(
@@ -181,4 +184,21 @@ for batch in eval_dataloader:
 accuracy = accuracy_score(true_labels, predictions)
 print(f'Accuracy: {accuracy}')
 print(classification_report(true_labels, predictions))
-torch.save(model.state_dict(), 'text_clf.pth')
+torch.save(model.state_dict(), str(OUTPUT_DIR / 'final.pth'))
+
+# 8. Plot Losses & Accuracies
+plt.figure()
+plt.plot(train_losses, marker='o', linestyle='-', color='b')
+plt.title('Training Loss')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.grid(True)
+plt.savefig(str(OUTPUT_DIR / "train_loss.png"))
+
+plt.figure()
+plt.plot(accuracies, marker='x', linestyle='--', color='r')
+plt.title('Accuracy Curve')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.grid(True)
+plt.savefig(str(OUTPUT_DIR / "acc.png"))
