@@ -12,11 +12,12 @@ from pathlib import Path
 OUTPUT_DIR = Path("./output")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 PLOT_DIR = OUTPUT_DIR / "plot"
+PLOT_DIR.mkdir(parents=True, exist_ok=True)
 WEIGHTS_DIR = OUTPUT_DIR / "weights"
+WEIGHTS_DIR.mkdir(parents=True, exist_ok=True)
 
 # 1.load the data
-file_path = 'D:/Desktop/study in France/ESIGELEC-study/Intership/IPSOS/cleaned_data_for_model.xlsx'
-df = pd.read_excel(file_path).dropna()  # Drop NaN
+df = pd.read_excel('data/cleaned_data_for_model.xlsx').dropna()  # Drop NaN
 df = df.sample(frac=1, random_state=42).reset_index(drop=True)  # Shuffle
 
 # 2.Split the data into Training and evaluating Sets
@@ -87,7 +88,7 @@ optimizer = AdamW(model.parameters(), lr=2e-5, eps=1e-8)
 # 6. Train the Model
 
 # Number of training epochs
-epochs = 1
+epochs = 100
 
 # Total number of training steps
 total_steps = len(train_dataloader) * epochs
@@ -139,6 +140,7 @@ for epoch in range(epochs):
         b_input_ids, b_input_mask, b_labels = batch
         b_input_ids = b_input_ids.to(device)
         b_input_mask = b_input_mask.to(device)
+        b_labels = b_labels.to(device)
 
         with torch.no_grad():
             outputs = model(b_input_ids, token_type_ids=None, attention_mask=b_input_mask, labels=b_labels)
@@ -157,7 +159,10 @@ for epoch in range(epochs):
         f'>> EVAL == Accuracy: {accuracy}  '
         f'Eval Loss: {avg_eval_loss}'
     )
-    torch.save(model.state_dict(), str(WEIGHTS_DIR / f'best_e{epoch + 1}.pth')) if accuracy > best_acc else None
+    if accuracy > best_acc:
+        best_acc = accuracy
+        torch.save(model.state_dict(), str(WEIGHTS_DIR / 'best.pth'))
+        print(f">> Best Model saved with accuracy: {best_acc}")
 
 # TODO: Use matplotlib.pyplot draw -- Train loss curve, eval loss curve, accuracy curve
 print(
